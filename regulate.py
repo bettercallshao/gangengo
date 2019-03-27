@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import os
 from zipfile import ZipFile
@@ -9,21 +8,22 @@ from matplotlib.ticker import MultipleLocator
 zip_dir = 'computer-go-dataset/TYGEM/Kifu'
 out_dir = 'data/TYGEN'
 
-S = 19
+S = 20
 COLORS = {
-    'B': 0,
+    'B': -1,
     'W': 1,
-    'N': 0.5,
+    'N': 0,
 }
+FILE_NAME = 'go'
 
 
 def n_from_alpha(alpha):
     return alpha.encode('utf-8')[0] - 97
 
 
-def df_from_kifu(kifu):
+def arr_from_kifu(kifu):
     lines = kifu.split('\n')
-    mat = np.zeros((len(lines), S*S))
+    mat = np.zeros((len(lines), S, S))
     for idx, line in enumerate(kifu.split('\n')):
         if line:
             row = np.zeros((S, S)) + COLORS['N']
@@ -32,12 +32,12 @@ def df_from_kifu(kifu):
                 if hand and len(hand) == 5:
                     row[n_from_alpha(hand[2]),
                         n_from_alpha(hand[3])] = COLORS[hand[0]]
-            mat[idx, :] = row.reshape((1, S*S))
+            mat[idx, :] = row
 
-    return pd.DataFrame(mat)
+    return mat
 
 
-def df_from_kifu_zip_dir():
+def arr_from_kifu_zip_dir():
     # list files and remove zip suffix
     names = map(lambda x: x[:-4], os.listdir(zip_dir))
 
@@ -53,39 +53,40 @@ def df_from_kifu_zip_dir():
         # get raw kifu
         kifu = zf.read(name).decode('utf-8')
         # convert to pandas
-        df = df_from_kifu(kifu)
+        arr = arr_from_kifu(kifu)
         if big is None:
-            big = df
+            big = arr
         else:
-            big = pd.concat([big, df])
+            big = np.concatenate([big, arr], axis=0)
 
     return big
 
 
-def df_from_noise():
+def arr_from_noise():
     N_FAKE = 140*1000
-    arr = np.random.randint(0, 4, size=(N_FAKE, S*S)) / 3
+    arr = np.random.randint(0, 4, size=(N_FAKE, S, S)) / 3
     arr[(arr > 0) & (arr < 1)] = 0.5
-    df = pd.DataFrame(arr)
-    return df
+    arr = arr * 2 - 1
+    return arr
 
 
-def make_csv():
-    neg = df_from_noise()
+def make_pos_neg_csv():
+    neg = arr_from_noise()
     neg['go'] = 0
-    pos = df_from_kifu_zip_dir()
+    pos = arr_from_kifu_zip_dir()
     pos['go'] = 1
 
-    big = pd.concat([pos, neg])
+    big = np.concatenate([pos, neg], axis=0)
     big.to_csv(os.path.join(out_dir, 'go.csv'), index=None)
 
 
-def viz(t):
-    if t == 'pos':
-        df = pd.read_csv(os.path.join(out_dir, '2016-07.csv'))
-    else:
-        df = df_from_noise()
-    row = df.iloc[np.random.randint(0, df.shape[0])]
+def make_pos_npy():
+    pos = arr_from_kifu_zip_dir()
+    np.savez_compressed(FILE_NAME, go=pos.reshape(pos.shape[0], S, S))
+
+
+def viz_row(arr):
+    row = arr[np.random.randint(0, arr.shape[0])]
 
     plt.figure()
     loc = MultipleLocator(base=1)
@@ -93,11 +94,12 @@ def viz(t):
     plt.gca().yaxis.set_major_locator(loc)
     plt.gca().set_axisbelow(True)
     plt.grid(linestyle='-', axis='both', linewidth='0.5', color='grey')
-    for idx in range(row.shape[0]):
-        if row[idx] > 0.75:
-            plt.scatter(idx % S, int(idx / 19), c='black', s=50)
-        elif row[idx] < 0.25:
-            plt.scatter(idx % S, int(idx / 19), c='red', s=50)
+    for x in range(row.shape[0]):
+        for y in range(row.shape[1]):
+            if row[x][y] > 0.5:
+                plt.scatter(x, y, c='black', s=50)
+            elif row[x][y] < -0.5:
+                plt.scatter(x, y, c='red', s=50)
 
 
 def show():
@@ -106,9 +108,8 @@ def show():
 
 def compare():
     while True:
-        viz('pos')
-        viz('neg')
+        pos = np.load(FILE_NAME + '.npz')['go']
+        viz_row(pos)
+        neg = arr_from_noise()
+        viz_row(neg)
         show()
-
-
-compare()
