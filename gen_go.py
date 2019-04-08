@@ -8,7 +8,11 @@ class GenGo(object):
         self.kifu = KifuGen()
 
     def arr_from_random(self, n):
-        return arr_from_rand_kifu(self.kifu.str_from_random(), n)
+        while True:
+            try:
+                return arr_from_rand_kifu(self.kifu.str_from_random(), n)
+            except:
+                pass
 
     def show_random(self):
         show_single_arr(arr_from_rand_kifu(self.kifu.str_from_random(), 1))

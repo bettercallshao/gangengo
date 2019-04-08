@@ -54,8 +54,7 @@ def arr_from_rand_list(l, n):
     """Stitch list of kifu array randomly to a 3D array"""
     l = l.copy()
     if len(l) < n:
-        print('warning: list is too short to stitch')
-        l = l * (int(n / len(l)) + 1)
+        raise Exception('warning: list is too short to stitch')
 
     # take first n items after shuffle
     np.random.shuffle(l)
