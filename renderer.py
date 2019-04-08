@@ -31,7 +31,7 @@ def _list_copy_mutated_arr(arr):
         arr,
         np.flip(arr, axis=0),
         np.flip(arr, axis=1),
-        np.flip(arr, axis=(0,1)),
+        np.flip(np.flip(arr, axis=0), axis=1),
     ]
     l += [a.T for a in l]
     return l
