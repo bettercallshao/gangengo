@@ -55,7 +55,7 @@ def arr_from_rand_list(l, n):
     l = l.copy()
     if len(l) < n:
         print('warning: list is too short to stitch')
-        l = l * (int(n / l) + 1)
+        l = l * (int(n / len(l)) + 1)
 
     # take first n items after shuffle
     np.random.shuffle(l)
