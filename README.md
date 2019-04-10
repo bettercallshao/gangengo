@@ -1,6 +1,6 @@
 ## Clone this repo in cwd
 
-https://github.com/timlyrics/gangengo
+https://github.com/yenw/computer-go-dataset
 
 ## To update go.zip
     pipenv install
