@@ -9,3 +9,6 @@ https://github.com/yenw/computer-go-dataset
 
 ## To use go.zip
     See jupyter notebook in jupyter/
+
+## Result
+![BitEx Demo](https://imgur.com/F3FKP31.gif "gangengo") 
